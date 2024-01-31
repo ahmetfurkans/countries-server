@@ -1,23 +1,50 @@
 package example.com.routes
 
+import example.com.base.BaseRoutingTest
+import example.com.fake.FakeCountryRepository
 import example.com.models.ApiResponse
-import example.com.plugins.configureRouting
+import example.com.repository.CountryRepository
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.server.application.*
 import io.ktor.server.routing.*
-import io.ktor.server.testing.*
 import kotlinx.serialization.json.Json
+import org.junit.Before
+import org.koin.dsl.module
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class GetAllCountriesTest {
+class GetAllCountriesTest : BaseRoutingTest() {
+
+    private val countryRepository: CountryRepository = FakeCountryRepository()
+
+    @Before
+    fun setup() {
+        testModule = module {
+            single { countryRepository }
+        }
+        testRouting = {
+            install(Routing) {
+                getAllCountries()
+            }
+        }
+    }
 
     @Test
-    fun `access root endpoint, with non-numeric page query, assert error`() = testApplication {
-        application {
-            configureRouting()
+    fun `access countries endpoint, with valid page query, assert correct response`() = withBaseTestApplication {
+        val pageQuery = 3
+        client.get("/countries?page=$pageQuery").apply {
+            val actual = Json.decodeFromString<ApiResponse>(this.bodyAsText())
+            val expected = countryRepository.getCountries(pageQuery)
+
+            assertEquals(HttpStatusCode.OK, status)
+            assertEquals(actual, expected)
         }
+    }
+
+    @Test
+    fun `access countries endpoint, with non-numeric page query, assert error`() = withBaseTestApplication {
         client.get("/countries?page=").apply {
             val actual = Json.decodeFromString<ApiResponse>(this.bodyAsText())
             val expected = ApiResponse(
@@ -30,11 +57,8 @@ class GetAllCountriesTest {
     }
 
     @Test
-    fun `access root endpoint, with invalid page size, assert error`() = testApplication {
-        application {
-            configureRouting()
-        }
-        client.get("/countries?page=").apply {
+    fun `access countries endpoint, with invalid page size, assert error`() = withBaseTestApplication {
+        client.get("/countries?page=${countryRepository.pageCount + 1}").apply {
             val actual = Json.decodeFromString<ApiResponse>(this.bodyAsText())
             val expected = ApiResponse(
                 success = false,

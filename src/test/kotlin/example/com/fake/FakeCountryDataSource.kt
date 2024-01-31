@@ -3,7 +3,8 @@ package example.com.fake
 import example.com.models.*
 
 class FakeCountryDataSource {
-    fun createFakeCountriesDataSource(): List<Country> {
+
+    fun createFakeCountriesDataSource(): Map<Int, List<Country>> {
         return listOf(
             createFakeCountry("Country1", "Flag1", "SVG1", "Alt1"),
             createFakeCountry("Country2", "Flag2", "SVG2", "Alt2"),
@@ -11,7 +12,7 @@ class FakeCountryDataSource {
             createFakeCountry("Country4", "Flag4", "SVG4", "Alt4"),
             createFakeCountry("Country5", "Flag5", "SVG5", "Alt5"),
             createFakeCountry("Country6", "Flag6", "SVG6", "Alt6"),
-        )
+        ).chunked(2).withIndex().associate { (index, list) -> index to list }
     }
 
     private fun createFakeCountry(
@@ -34,7 +35,6 @@ class FakeCountryDataSource {
                         official = "Official English Name $name",
                         common = "Common English Name $name"
                     )
-                    // Add more language mappings as needed
                 )
             ),
             currencies = mapOf(
@@ -42,7 +42,6 @@ class FakeCountryDataSource {
                     name = "US Dollar",
                     symbol = "$"
                 )
-                // Add more currency mappings as needed
             ),
             capital = listOf("Capital $name"),
             region = "Region $name",

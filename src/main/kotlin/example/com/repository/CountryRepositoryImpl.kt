@@ -2,11 +2,8 @@ package example.com.repository
 
 import example.com.models.ApiResponse
 import example.com.models.Country
-import kotlinx.coroutines.*
 import kotlinx.serialization.json.Json
 import java.io.File
-import java.lang.Exception
-import kotlin.coroutines.coroutineContext
 
 const val PAGE_SIZE = 10
 
